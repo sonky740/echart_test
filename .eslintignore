@@ -1,0 +1,13 @@
+# Build files
+dist
+node_modules
+
+# Config files
+vite.config.ts
+*.config.js
+
+# Other
+*.sh
+*.md
+*.lock
+*.json 
