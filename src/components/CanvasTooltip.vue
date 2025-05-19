@@ -12,6 +12,30 @@ const triggerArea = ref<HTMLDivElement | null>(null);
 const mousePosition = ref({ x: 0, y: 0 });
 const isHovering = ref(false);
 const pixelRatio = ref(2);
+const tooltipWidth = ref(0);
+const tooltipHeight = ref(0);
+
+const calculateTooltipSize = () => {
+  if (!canvas.value) return { width: 0, height: 0 };
+
+  const ctx = canvas.value.getContext('2d');
+  if (!ctx) return { width: 0, height: 0 };
+
+  ctx.font = '14px Arial';
+
+  let maxWidth = 0;
+  textArr.forEach((text, index) => {
+    const definedText = `${index + 1}. ${text}`;
+    const textWidth = ctx.measureText(definedText).width;
+    maxWidth = Math.max(maxWidth, textWidth);
+  });
+
+  const padding = 20;
+  const width = maxWidth + padding * 2;
+  const height = 20 * textArr.length + padding * 2;
+
+  return { width, height };
+};
 
 const drawText = () => {
   if (!canvas.value) return;
@@ -19,26 +43,35 @@ const drawText = () => {
   const ctx = canvas.value.getContext('2d');
   if (!ctx) return;
 
-  const displayWidth = window.innerWidth;
-  const displayHeight = window.innerHeight;
+  const { width, height } = calculateTooltipSize();
+  tooltipWidth.value = width;
+  tooltipHeight.value = height;
 
-  canvas.value.width = displayWidth * pixelRatio.value;
-  canvas.value.height = displayHeight * pixelRatio.value;
+  canvas.value.width = width * pixelRatio.value;
+  canvas.value.height = height * pixelRatio.value;
+
+  canvas.value.style.width = `${width}px`;
+  canvas.value.style.height = `${height}px`;
+
+  const x = mousePosition.value.x + 15;
+  const y = mousePosition.value.y + 15;
+  canvas.value.style.top = `${y}px`;
+  canvas.value.style.left = `${x}px`;
 
   ctx.scale(pixelRatio.value, pixelRatio.value);
-
-  ctx.clearRect(0, 0, displayWidth, displayHeight);
+  ctx.clearRect(0, 0, width, height);
 
   if (isHovering.value) {
     ctx.font = '14px Arial';
     ctx.fillStyle = '#333';
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = '#fff';
 
+    const padding = 10;
     textArr.forEach((text, index) => {
       const definedText = `${ctx.measureText(text).width} ${text}`;
-      const x = mousePosition.value.x + 15;
-      const y = mousePosition.value.y + 15 + index * 20;
 
-      ctx.fillText(`${index + 1}. ${definedText}`, x, y);
+      ctx.fillText(`${index + 1}. ${definedText}`, padding, padding + index * 20);
     });
   }
 };
@@ -61,35 +94,17 @@ const handleMouseLeave = () => {
   if (canvas.value) {
     const ctx = canvas.value.getContext('2d');
     if (ctx) {
-      const displayWidth = window.innerWidth;
-      const displayHeight = window.innerHeight;
-
-      ctx.clearRect(0, 0, displayWidth, displayHeight);
+      ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
     }
   }
 };
 
-const initCanvasSize = () => {
-  if (canvas.value) {
-    const displayWidth = window.innerWidth;
-    const displayHeight = window.innerHeight;
-
-    canvas.value.width = displayWidth * pixelRatio.value;
-    canvas.value.height = displayHeight * pixelRatio.value;
-
-    canvas.value.style.width = `${displayWidth}px`;
-    canvas.value.style.height = `${displayHeight}px`;
-  }
-};
-
 onMounted(() => {
-  initCanvasSize();
-
-  window.addEventListener('resize', initCanvasSize);
+  window.addEventListener('resize', drawText);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('resize', initCanvasSize);
+  window.removeEventListener('resize', drawText);
 });
 </script>
 
@@ -101,9 +116,9 @@ onUnmounted(() => {
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
   >
-    여기에 마우스 올리면 됨.
+    Canvas 여기에 마우스 올리면 됨.
   </div>
-  <canvas ref="canvas" class="canvas"></canvas>
+  <canvas v-show="isHovering" ref="canvas" class="canvas"></canvas>
 </template>
 
 <style scoped>
@@ -118,12 +133,9 @@ onUnmounted(() => {
 }
 
 .canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+  position: absolute;
   z-index: 999;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 4px;
 }
 </style>

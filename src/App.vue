@@ -1,15 +1,15 @@
 <script setup lang="ts">
 // import LineChart from './components/LineChart.vue';
 // import EchartProvider from './contexts/EchartProvider.vue';
-import Canvas from './components/Canvas.vue';
+import CanvasTooltip from './components/CanvasTooltip.vue';
+import HtmlTooltip from './components/HtmlTooltip.vue';
 </script>
 
 <template>
-  <div>
-    <!-- <EchartProvider>
-      <LineChart />
-      <LineChart />
-    </EchartProvider> -->
-    <Canvas />
-  </div>
+  <!-- <EchartProvider>
+    <LineChart />
+    <LineChart />
+  </EchartProvider> -->
+  <CanvasTooltip />
+  <HtmlTooltip />
 </template>
